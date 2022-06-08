@@ -51,12 +51,12 @@ public class SJF {
             int arrival = Util.getInputOfRange(
                 0,
                 9999,
-                String.format("Enter the arrival time for Postage #%d: ", i)
+                String.format("Enter the pickup time for Postage #%d: ", i)
             );
             int burst = Util.getInputOfRange(
                 0,
                 9999,
-                String.format("Enter the burst time for Postage #%d: ", i)
+                String.format("Enter the delivery time for Postage #%d: ", i)
             );
 
             arrivals.offer( new Postage( i, arrival, burst ) );
@@ -146,8 +146,8 @@ public class SJF {
         return String.format(
             "%-5s%-10s%-10s%-10s%-10s%-10s",
             "ID", 
-            "Arrival", 
-            "Burst", 
+            "Pickup", 
+            "Delivery", 
             "Started",
             "Completed", 
             "Waited"

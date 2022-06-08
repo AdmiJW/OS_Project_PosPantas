@@ -2,6 +2,7 @@ package classes;
 
 
 import java.util.Scanner;
+import java.io.IOException;
 import java.util.InputMismatchException;
 
 
@@ -36,8 +37,16 @@ public class Util {
 
 
     public static void clearScreen() {
-        System.out.print("\033[H\033[2J");  
-        System.out.flush();  
+        // System.out.print("\033[H\033[2J");  
+        // System.out.flush();  
+        final String os = System.getProperty("os.name");
+        try {
+            if (os.contains("Windows"))
+                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+            else
+                Runtime.getRuntime().exec("clear");
+        } catch (IOException e) {}
+        catch (InterruptedException e) {}
     }
 
 

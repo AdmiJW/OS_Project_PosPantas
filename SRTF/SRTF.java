@@ -92,8 +92,8 @@ public class SRTF extends SJF {
         return String.format(
             "%-5s%-10s%-10s%-10s%-10s",
             "ID", 
-            "Arrival", 
-            "Burst",
+            "Pickup", 
+            "Delivery",
             "Completed", 
             "Waited"
         );

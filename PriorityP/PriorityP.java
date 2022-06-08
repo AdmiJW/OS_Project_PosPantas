@@ -101,8 +101,8 @@ public class PriorityP extends PriorityNP {
         return String.format(
             "%-5s%-10s%-10s%-10s%-10s%-10s",
             "ID", 
-            "Arrival", 
-            "Burst",
+            "Pickup", 
+            "Delivery",
             "Priority",
             "Completed", 
             "Waited"
