@@ -66,15 +66,19 @@ public class SJF {
 
 
     protected void compute() {
-        // Keep iterating while we not all postage is delivered.
-        //      Condition 1 - Still got pending arrivals
-        //      Condition 2 - Got ongoing postage
-        while ( !arrivals.isEmpty() || currentPostage != null ) {
-            //* If the current executing postage finish first */
-            if ( 
-                arrivals.isEmpty() || 
-                (currentPostage != null && currentPostage.completionTime <= arrivals.peek().arrivalTime )
-            ) {
+        while (!arrivals.isEmpty() || !waitingQueue.isEmpty() || currentPostage != null) {
+            if (currentPostage == null) {
+                handleArrivals();
+
+                currentPostage = waitingQueue.poll();
+                currentPostage.lastStarted = currentTime;
+                currentPostage.completionTime = currentTime + currentPostage.remainingBurst;
+
+                System.out.printf(">> ( t = %-4d): Parcel #%d out for delivery!\n", currentTime, currentPostage.id);
+            } 
+            else {
+                while ( handleArrivals() ) {};
+
                 // Update the waiting time for all in waitingQueue
                 for (Postage p: waitingQueue) p.totalWaited += currentPostage.completionTime - currentTime;
                 // Push the postage to completed list
@@ -84,24 +88,87 @@ public class SJF {
                 // The current postage is completed
                 System.out.printf(">> ( t = %-4d): Parcel #%d delivered!\n", currentTime, currentPostage.id);
                 currentPostage = null;
-
-                // Select new postage, if there are still postages to be done
-                selectNewPostageIfAvailable();
-            }
-            //* Otherwise another job arrives first */
-            else {
-                // Update the waiting time for all in waitingQueue
-                for (Postage p: waitingQueue) p.totalWaited += arrivals.peek().arrivalTime - currentTime;
-                // Update time
-                currentTime = arrivals.peek().arrivalTime;
-                // Add the new work into the queue.
-                waitingQueue.offer( arrivals.poll() );
-
-                // Select new postage, in case if no postage is currently being processed
-                selectNewPostageIfAvailable();
             }
         }
+
+
+
+        // Keep iterating while we not all postage is delivered.
+        //      Condition 1 - Still got pending arrivals
+        //      Condition 2 - Got ongoing postage
+        // while ( !arrivals.isEmpty() || currentPostage != null ) {
+        //     //* If the current executing postage finish first */
+        //     if ( 
+        //         arrivals.isEmpty() || 
+        //         (currentPostage != null && currentPostage.completionTime <= arrivals.peek().arrivalTime )
+        //     ) {
+        //         // Update the waiting time for all in waitingQueue
+        //         for (Postage p: waitingQueue) p.totalWaited += currentPostage.completionTime - currentTime;
+        //         // Push the postage to completed list
+        //         completed.add( currentPostage );
+        //         // Update time
+        //         currentTime = currentPostage.completionTime;
+        //         // The current postage is completed
+        //         System.out.printf(">> ( t = %-4d): Parcel #%d delivered!\n", currentTime, currentPostage.id);
+        //         currentPostage = null;
+                
+        //         // Let postages arrive first if any, instead of directly selecting from the waiting queue
+        //         if (!arrivals.isEmpty() && arrivals.peek().arrivalTime == currentTime) continue;
+
+        //         // Select new postage, if there are still postages to be done
+        //         selectNewPostageIfAvailable();
+        //     }
+        //     //* Otherwise another job arrives first */
+        //     else {
+        //         // Update the waiting time for all in waitingQueue
+        //         for (Postage p: waitingQueue) p.totalWaited += arrivals.peek().arrivalTime - currentTime;
+        //         // Update time
+        //         currentTime = arrivals.peek().arrivalTime;
+        //         // Add the new work into the queue.
+        //         waitingQueue.offer( arrivals.poll() );
+
+        //         // Select new postage, in case if no postage is currently being processed
+        //         selectNewPostageIfAvailable();
+        //     }
+        // }
     }
+
+
+    // The main purpose of this function is to handle arriving packages from the arrival queue
+    // and push it into waiting queue as needed.
+    //? Push to queue with condition:
+    //? 1. Waiting queue is empty && curr is null (Eg: When algorithm first starts)
+    //? 2. Completion time of curr is exceed the peek's arrival time. (When a package is currently being delivered)
+    //? 3. Current time is exceed than arrival time. (Eg: After package delivery is completed)
+    //
+    //! For pickup packages of same time, they shall be added in bulk
+    //! What happens when arrival === completion?
+    //! Non-preemptive: The order doesn't matter.
+    //! Preemptive: Package delivery shall complete first, preempting when a package is going to complete is unreasonable
+    protected boolean handleArrivals() {
+        if (arrivals.isEmpty()) return false;
+
+        if (
+            (waitingQueue.isEmpty() && currentPostage == null) ||
+            (currentTime >= arrivals.peek().arrivalTime) ||
+            (currentPostage != null && currentPostage.completionTime > arrivals.peek().arrivalTime)
+        ) {
+            int t = arrivals.peek().arrivalTime;
+
+            // Update times
+            for (Postage p: waitingQueue) p.totalWaited += t - currentTime;
+            currentTime = t;
+
+            // Add the arriving packages in bulk
+            while (!arrivals.isEmpty() && arrivals.peek().arrivalTime == t)
+                waitingQueue.add( arrivals.poll() );
+
+            return true;
+        }
+        return false;
+    }
+
+
 
 
     protected void selectNewPostageIfAvailable() {

@@ -40,6 +40,11 @@ public class Postage {
         return a.arrivalTime - b.arrivalTime;
     }
 
+    public static int compareArrivalThenBurstAscending(Postage a, Postage b) {
+        if ( compareArrivalAscending(a, b) == 0 ) return compareBurstAscending(a, b);
+        return compareArrivalAscending(a, b);
+    }
+
     public static int comparePriorityAscending(Postage a, Postage b) {
         return a.priority - b.priority;
     }
