@@ -69,25 +69,11 @@ public class SJF {
         while (!arrivals.isEmpty() || !waitingQueue.isEmpty() || currentPostage != null) {
             if (currentPostage == null) {
                 handleArrivals();
-
-                currentPostage = waitingQueue.poll();
-                currentPostage.lastStarted = currentTime;
-                currentPostage.completionTime = currentTime + currentPostage.remainingBurst;
-
-                System.out.printf(">> ( t = %-4d): Parcel #%d out for delivery!\n", currentTime, currentPostage.id);
+                selectNewPostageFromWaitingQueue();
             } 
             else {
                 while ( handleArrivals() ) {};
-
-                // Update the waiting time for all in waitingQueue
-                for (Postage p: waitingQueue) p.totalWaited += currentPostage.completionTime - currentTime;
-                // Push the postage to completed list
-                completed.add( currentPostage );
-                // Update time
-                currentTime = currentPostage.completionTime;
-                // The current postage is completed
-                System.out.printf(">> ( t = %-4d): Parcel #%d delivered!\n", currentTime, currentPostage.id);
-                currentPostage = null;
+                deliverCurrentPostageUntilCompletion();
             }
         }
 
@@ -96,6 +82,7 @@ public class SJF {
         // Keep iterating while we not all postage is delivered.
         //      Condition 1 - Still got pending arrivals
         //      Condition 2 - Got ongoing postage
+
         // while ( !arrivals.isEmpty() || currentPostage != null ) {
         //     //* If the current executing postage finish first */
         //     if ( 
@@ -157,6 +144,7 @@ public class SJF {
 
             // Update times
             for (Postage p: waitingQueue) p.totalWaited += t - currentTime;
+            if (currentPostage != null) currentPostage.remainingBurst -= t - currentTime;
             currentTime = t;
 
             // Add the arriving packages in bulk
@@ -166,6 +154,30 @@ public class SJF {
             return true;
         }
         return false;
+    }
+
+
+
+    // Use this when you are sure that the current postage will be delivered until complete.
+    protected void deliverCurrentPostageUntilCompletion() {
+        // Update the waiting time for all in waitingQueue
+        for (Postage p: waitingQueue) p.totalWaited += currentPostage.completionTime - currentTime;
+        // Push the postage to completed list
+        completed.add( currentPostage );
+        // Update time
+        currentTime = currentPostage.completionTime;
+        // The current postage is completed
+        System.out.printf(">> ( t = %-4d): Parcel #%d delivered!\n", currentTime, currentPostage.id);
+        currentPostage = null;
+    }
+
+
+    protected void selectNewPostageFromWaitingQueue() {
+        currentPostage = waitingQueue.poll();
+        currentPostage.lastStarted = currentTime;
+        currentPostage.completionTime = currentTime + currentPostage.remainingBurst;
+
+        System.out.printf(">> ( t = %-4d): Parcel #%d out for delivery!\n", currentTime, currentPostage.id);
     }
 
 
@@ -201,7 +213,7 @@ public class SJF {
             "%-5d%-10d%-10d%-10d%-10d%-10d",
             p.id,
             p.arrivalTime,
-            p.remainingBurst,
+            p.burstTime,
             p.lastStarted,
             p.completionTime,
             p.totalWaited
