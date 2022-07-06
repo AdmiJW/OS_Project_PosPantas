@@ -76,48 +76,6 @@ public class SJF {
                 deliverCurrentPostageUntilCompletion();
             }
         }
-
-
-
-        // Keep iterating while we not all postage is delivered.
-        //      Condition 1 - Still got pending arrivals
-        //      Condition 2 - Got ongoing postage
-
-        // while ( !arrivals.isEmpty() || currentPostage != null ) {
-        //     //* If the current executing postage finish first */
-        //     if ( 
-        //         arrivals.isEmpty() || 
-        //         (currentPostage != null && currentPostage.completionTime <= arrivals.peek().arrivalTime )
-        //     ) {
-        //         // Update the waiting time for all in waitingQueue
-        //         for (Postage p: waitingQueue) p.totalWaited += currentPostage.completionTime - currentTime;
-        //         // Push the postage to completed list
-        //         completed.add( currentPostage );
-        //         // Update time
-        //         currentTime = currentPostage.completionTime;
-        //         // The current postage is completed
-        //         System.out.printf(">> ( t = %-4d): Parcel #%d delivered!\n", currentTime, currentPostage.id);
-        //         currentPostage = null;
-                
-        //         // Let postages arrive first if any, instead of directly selecting from the waiting queue
-        //         if (!arrivals.isEmpty() && arrivals.peek().arrivalTime == currentTime) continue;
-
-        //         // Select new postage, if there are still postages to be done
-        //         selectNewPostageIfAvailable();
-        //     }
-        //     //* Otherwise another job arrives first */
-        //     else {
-        //         // Update the waiting time for all in waitingQueue
-        //         for (Postage p: waitingQueue) p.totalWaited += arrivals.peek().arrivalTime - currentTime;
-        //         // Update time
-        //         currentTime = arrivals.peek().arrivalTime;
-        //         // Add the new work into the queue.
-        //         waitingQueue.offer( arrivals.poll() );
-
-        //         // Select new postage, in case if no postage is currently being processed
-        //         selectNewPostageIfAvailable();
-        //     }
-        // }
     }
 
 
@@ -176,24 +134,11 @@ public class SJF {
         currentPostage = waitingQueue.poll();
         currentPostage.lastStarted = currentTime;
         currentPostage.completionTime = currentTime + currentPostage.remainingBurst;
-
+    
         System.out.printf(">> ( t = %-4d): Parcel #%d out for delivery!\n", currentTime, currentPostage.id);
     }
 
-
-
-
-    protected void selectNewPostageIfAvailable() {
-        if (currentPostage == null && !waitingQueue.isEmpty()) {
-            currentPostage = waitingQueue.poll();
-            currentPostage.lastStarted = currentTime;
-            currentPostage.completionTime = currentTime + currentPostage.remainingBurst;
-
-            System.out.printf(">> ( t = %-4d): Parcel #%d out for delivery!\n", currentTime, currentPostage.id);
-        }
-    }
-
-
+    
     protected void computeAverages() {
         double totalWaited = 0;
         double totalTurnaround = 0;
